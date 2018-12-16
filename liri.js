@@ -11,75 +11,37 @@ var spotify = new Spotify(keys.spotify);
 //OMDB axios request and api 
 var axios = require("axios");
 
-//Split the string arguments / commands into an array
-var nodeArgs = process.argv;
-//assign the command argument the 2 index within the array
+//assign the command argument to the 2 index of the array
+//slice the string into an array at the third index and then join
+//them into a string with spaces between each word.
 var command = process.argv[2];
-
-//create and empty variable for holding the movie name
-var movieName = "";
-
-//create an empty variable to hold the song name
-var songName = "";
-
-//Loop through all of the words in the array
-//and a loop within a loop to concatnate the "+" to include movie 
-//titles with multiple words
-for (var i = 3; i < nodeArgs.length; i++) {
-
-    if (i > 3 && i < nodeArgs.length) {
-        movieName = movieName + "+" + nodeArgs[i];
-    }
-    else {
-        movieName += nodeArgs[i];
-    }
-}
-
-//Loop through all of the words in the array
-//and a loop within a loop to concatnate the "+" to include song 
-//titles with multiple words
-for (var i = 3; i < nodeArgs.length; i++) {
-
-    if (i > 3 && i < nodeArgs.length) {
-        songName = songName + "+" + nodeArgs[i];
-    }
-    else {
-        songName += nodeArgs[i];
-    }
-}
+var term = process.argv.slice(3).join(" ");
 
 //switch cases for the string commands and the function that
 //is called based on those commands
 switch (command) {
     case "movie-this":
-        if (movieName) {
-            movieDetails(movieName)
-        } else {
-            movieDetails("Mr. Nobody");
-        }
+        movieDetails(term)
         break;
 
     case "spotify-this-song":
-        if (songName) {
-            songDetails(songName)
-        } else {
-            songDetails("The Sign");
-        }
+        songDetails(term)
         break;
 
     case "concert-this":
-        
+        console.log("ARTIST", term)
+        venueDetails(term)
+        break;
 
     case "do-what-it-says":
         doIt()
         break;
 };
 
-//create a function to store the axios call and if else statement
+//create functions for the four different commands to be called
+//they will retrieve the data from the associated data bases. 
 function movieDetails(movieName) {
-    //Then run a request with axios to the OMDB API with the movie specified
     var queryUrl = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=trilogy";
-
     axios.get(queryUrl).then(
         function (response) {
             //console.log(response);
@@ -95,6 +57,17 @@ function movieDetails(movieName) {
     );
 };
 
+function venueDetails(artist) {
+    var concertURL = "https://rest.bandsintown.com/artists/" + artist + "/events?app_id=codingbootcamp";
+    axios.get(concertURL).then(
+        function (response) {
+            console.log("Name of venue: " + response.data[0].venue.name);
+            console.log("Venue location: " + response.data[0].venue.city);
+            console.log("Date of event: " + response.data[0].datetime);
+            console.log();
+        }
+    )
+}
 function songDetails(songName) {
     spotify.search({ type: 'track', query: songName }, function (error, data) {
         if (!error) {
@@ -111,35 +84,12 @@ function songDetails(songName) {
         }
     });
 }
-
-// function songDetails(songName) {
-//     spotify.search({ type: 'track', query: songName }, function (error, data) {
-//         if (!error) {
-//             console.log(data);
-//             console.log("Artist: " + data.artists);
-//             console.log("Song's name: " + data.name);
-//             console.log("Preview link: " + data.preview_url);
-//             console.log("Album: " + data.album);
-//             console.log('\n');
-//         }else {
-//             console.log('error occurred');
-//         } 
-//     });
-// }
-
-function concertDetails() {
-    
-}
-
 function doIt() {
-    fs.readFile("random.txt", "utf8", function(error, data) {
+    fs.readFile("random.txt", "utf8", function (error, data) {
         if (error) {
             return console.log(error);
-          }
-
-          var dataArr = data.split(",");
-
-          songDetails(dataArr[1]);
+        }
+        var dataArr = data.split(",");
+        songDetails(dataArr[1]);
     });
-    
 }
